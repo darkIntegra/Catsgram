@@ -25,7 +25,7 @@ public class PostController {
         if (post.getDescription() == null || post.getDescription().isBlank()) {
             throw new ConditionsNotMetException("Описание не может быть пустым");
         }
-        // формируем дополнительный данные
+        // формируем дополнительные данные
         post.setId(getNextId());
         post.setPostDate(Instant.now());
         // сохраняем новую публикацию в памяти приложения
