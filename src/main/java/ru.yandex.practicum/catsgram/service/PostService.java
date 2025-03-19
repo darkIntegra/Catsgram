@@ -1,60 +1,37 @@
-package ru.yandex.practicum.catsgram.controller;
+package ru.yandex.practicum.catsgram.service;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.catsgram.exception.ConditionsNotMetException;
 import ru.yandex.practicum.catsgram.exception.NotFoundException;
 import ru.yandex.practicum.catsgram.model.Post;
-import ru.yandex.practicum.catsgram.model.User;
-import ru.yandex.practicum.catsgram.service.UserService;
 
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-@RestController
-@RequestMapping("/posts")
-public class PostController {
+// Указываем, что класс PostService - является бином и его
+// нужно добавить в контекст приложения
+@Service
+public class PostService {
     private final Map<Long, Post> posts = new HashMap<>();
-    private final UserService userService;
 
-    public PostController(UserService userService) {
-        this.userService = userService;
-    }
-
-    @GetMapping
     public Collection<Post> findAll() {
         return posts.values();
     }
 
-    @PostMapping
-    public Post create(@RequestBody Post post) {
-        // Проверяем, что описание не пустое
+    public Post create(Post post) {
         if (post.getDescription() == null || post.getDescription().isBlank()) {
             throw new ConditionsNotMetException("Описание не может быть пустым");
         }
 
-        // Проверяем существование автора поста
-        Long authorId = post.getAuthorId();
-        if (authorId == null) {
-            throw new ConditionsNotMetException("Идентификатор автора не может быть null");
-        }
-
-        Optional<User> author = userService.findUserById(authorId);
-        if (author.isEmpty()) {
-            throw new ConditionsNotMetException("Автор с id = " + authorId + " не найден");
-        }
-
-        // Формируем дополнительные данные
         post.setId(getNextId());
         post.setPostDate(Instant.now());
         posts.put(post.getId(), post);
         return post;
     }
 
-    @PutMapping
-    public Post update(@RequestBody Post newPost) {
+    public Post update(Post newPost) {
         if (newPost.getId() == null) {
             throw new ConditionsNotMetException("Id должен быть указан");
         }
