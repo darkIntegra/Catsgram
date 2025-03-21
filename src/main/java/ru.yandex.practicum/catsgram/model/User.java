@@ -2,15 +2,14 @@ package ru.yandex.practicum.catsgram.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
 import java.time.Instant;
 
-@EqualsAndHashCode(of = { "email" })
 @Data
+@EqualsAndHashCode(of = { "email" }) // Уникальность по email
 public class User {
-    Long id;
-    String username;
-    String email;
-    String password;
-    Instant registrationDate;
+    private Long id;
+    private String username;
+    private String email;
+    private String password;
+    private Instant registrationDate;
 }

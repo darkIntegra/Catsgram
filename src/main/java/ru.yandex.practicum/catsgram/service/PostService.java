@@ -1,57 +1,47 @@
 package ru.yandex.practicum.catsgram.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.catsgram.exception.ConditionsNotMetException;
 import ru.yandex.practicum.catsgram.exception.NotFoundException;
 import ru.yandex.practicum.catsgram.model.Post;
 
-import java.time.Instant;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-// Указываем, что класс PostService - является бином и его
-// нужно добавить в контекст приложения
 @Service
+@RequiredArgsConstructor
 public class PostService {
     private final Map<Long, Post> posts = new HashMap<>();
 
-    public Collection<Post> findAll() {
-        return posts.values();
+    public Optional<Post> findById(Long id) {
+        return Optional.ofNullable(posts.get(id));
+    }
+
+    public List<Post> findAll() {
+        return List.copyOf(posts.values());
     }
 
     public Post create(Post post) {
-        if (post.getDescription() == null || post.getDescription().isBlank()) {
-            throw new ConditionsNotMetException("Описание не может быть пустым");
-        }
-
-        post.setId(getNextId());
-        post.setPostDate(Instant.now());
-        posts.put(post.getId(), post);
+        long nextId = getNextId();
+        post.setId(nextId);
+        posts.put(nextId, post);
         return post;
     }
 
-    public Post update(Post newPost) {
-        if (newPost.getId() == null) {
-            throw new ConditionsNotMetException("Id должен быть указан");
+    public Post update(Post updatedPost) {
+        if (posts.containsKey(updatedPost.getId())) {
+            posts.put(updatedPost.getId(), updatedPost);
+            return updatedPost;
         }
-        if (posts.containsKey(newPost.getId())) {
-            Post oldPost = posts.get(newPost.getId());
-            if (newPost.getDescription() == null || newPost.getDescription().isBlank()) {
-                throw new ConditionsNotMetException("Описание не может быть пустым");
-            }
-            oldPost.setDescription(newPost.getDescription());
-            return oldPost;
-        }
-        throw new NotFoundException("Пост с id = " + newPost.getId() + " не найден");
+        throw new NotFoundException("Пост с id = " + updatedPost.getId() + " не найден");
     }
 
     private long getNextId() {
-        long currentMaxId = posts.keySet()
-                .stream()
+        return posts.keySet().stream()
                 .mapToLong(id -> id)
                 .max()
-                .orElse(0);
-        return ++currentMaxId;
+                .orElse(0) + 1;
     }
 }

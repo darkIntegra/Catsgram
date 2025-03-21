@@ -84,11 +84,9 @@ public class UserService {
     }
 
     private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
+        return users.keySet().stream()
                 .mapToLong(id -> id)
                 .max()
-                .orElse(0);
-        return ++currentMaxId;
+                .orElse(0) + 1;
     }
 }
