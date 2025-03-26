@@ -1,14 +1,11 @@
 package ru.yandex.practicum.catsgram.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.catsgram.exception.ConditionsNotMetException;
-import ru.yandex.practicum.catsgram.exception.NotFoundException;
+import ru.yandex.practicum.catsgram.exception.ParameterNotValidException;
 import ru.yandex.practicum.catsgram.model.Post;
 import ru.yandex.practicum.catsgram.service.PostService;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -26,8 +23,15 @@ public class PostController {
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
 
+        // Проверка параметров
+        if (!"asc".equalsIgnoreCase(sort) && !"desc".equalsIgnoreCase(sort)) {
+            throw new ParameterNotValidException("sort", "Получено: " + sort + ". Должно быть: asc или desc");
+        }
         if (size <= 0) {
-            throw new IllegalArgumentException("Параметр size должен быть больше нуля");
+            throw new ParameterNotValidException("size", "Размер должен быть больше нуля");
+        }
+        if (from < 0) {
+            throw new ParameterNotValidException("from", "Начало выборки должно быть положительным числом");
         }
 
         // Создаем новый изменяемый список из данных, возвращаемых PostService
@@ -38,8 +42,6 @@ public class PostController {
             sortedPosts.sort(Comparator.comparing(Post::getPostDate));
         } else if ("desc".equalsIgnoreCase(sort)) {
             sortedPosts.sort((p1, p2) -> p2.getPostDate().compareTo(p1.getPostDate()));
-        } else {
-            throw new IllegalArgumentException("Неверное значение параметра sort. Допустимые значения: asc, desc");
         }
 
         // Применяем пагинацию
@@ -48,29 +50,5 @@ public class PostController {
         }
         int toIndex = Math.min(from + size, sortedPosts.size());
         return sortedPosts.subList(from, toIndex);
-    }
-
-    @GetMapping("/{id}")
-    public Post findById(@PathVariable Long id) {
-        return postService.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пост с id = " + id + " не найден"));
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Post create(@RequestBody Post post) {
-        if (post.getDescription() == null || post.getDescription().isBlank()) {
-            throw new ConditionsNotMetException("Описание не может быть пустым");
-        }
-        post.setPostDate(Instant.now());
-        return postService.create(post);
-    }
-
-    @PutMapping
-    public Post update(@RequestBody Post updatedPost) {
-        if (updatedPost.getId() == null) {
-            throw new ConditionsNotMetException("Id должен быть указан");
-        }
-        return postService.update(updatedPost);
     }
 }
