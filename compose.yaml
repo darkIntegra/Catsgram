@@ -1,0 +1,14 @@
+# Описание сервисов (контейнеров), которые должны быть развёрнуты
+services:
+  # Описание контейнера db
+  db: # Имя сервиса
+    image: postgres:16.1 # Образ PostgreSQL
+    container_name: catsgram-db # Имя контейнера
+    ports:
+      - "5432:5432" # Публикация порта базы данных
+    volumes:
+      - ~/postgres-data:/var/lib/postgresql/data # Новый путь для volume
+    environment:
+      POSTGRES_DB: catsgram # Имя базы данных
+      POSTGRES_USER: dbuser # Имя пользователя
+      POSTGRES_PASSWORD: password # Пароль пользователя (добавьте пароль по желанию)
