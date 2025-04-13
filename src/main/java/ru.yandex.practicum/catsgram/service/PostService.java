@@ -1,47 +1,40 @@
 package ru.yandex.practicum.catsgram.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.catsgram.exception.NotFoundException;
+import ru.yandex.practicum.catsgram.dal.PostRepository;
+import ru.yandex.practicum.catsgram.dto.NewPostRequest;
+import ru.yandex.practicum.catsgram.dto.PostDto;
+import ru.yandex.practicum.catsgram.mapper.PostMapper;
 import ru.yandex.practicum.catsgram.model.Post;
 
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class PostService {
-    private final Map<Long, Post> posts = new HashMap<>();
+    private final PostRepository postRepository;
 
-    public Optional<Post> findById(Long id) {
-        return Optional.ofNullable(posts.get(id));
+    public PostService(PostRepository postRepository) {
+        this.postRepository = postRepository;
     }
 
-    public List<Post> findAll() {
-        return List.copyOf(posts.values());
+    public List<PostDto> getAllPosts() {
+        return postRepository.findAll().stream()
+                .map(PostMapper::mapToPostDto)
+                .toList();
     }
 
-    public Post create(Post post) {
-        long nextId = getNextId();
-        post.setId(nextId);
-        posts.put(nextId, post);
-        return post;
+    public PostDto createPost(NewPostRequest request) {
+        Post post = new Post();
+        post.setUserId(request.getUserId());
+        post.setContent(request.getContent());
+        post.setCreatedAt(Instant.now());
+        return PostMapper.mapToPostDto(postRepository.save(post));
     }
 
-    public Post update(Post updatedPost) {
-        if (posts.containsKey(updatedPost.getId())) {
-            posts.put(updatedPost.getId(), updatedPost);
-            return updatedPost;
-        }
-        throw new NotFoundException("Пост с id = " + updatedPost.getId() + " не найден");
-    }
-
-    private long getNextId() {
-        return posts.keySet().stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0) + 1;
+    public PostDto getPostById(long id) {
+        return postRepository.findById(id)
+                .map(PostMapper::mapToPostDto)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 }

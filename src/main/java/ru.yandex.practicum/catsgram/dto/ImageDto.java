@@ -1,11 +1,11 @@
-package ru.yandex.practicum.catsgram.model;
+package ru.yandex.practicum.catsgram.dto;
 
 import lombok.Data;
 
 import java.time.Instant;
 
 @Data
-public class Image {
+public class ImageDto {
     private long id;
     private long postId;
     private String imageUrl;
